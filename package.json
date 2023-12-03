@@ -1,0 +1,18 @@
+{
+  "name": "trabalho-m3",
+  "version": "1.0.0",
+  "description": "Trabalho da Disciplina de BD 2 - UNIVALI",
+  "main": "trabalho.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ivan, Mansur",
+  "license": "ISC",
+  "dependencies": {
+    "cassandra-driver": "^4.7.2",
+    "express": "^4.18.2",
+    "mysql2": "^3.6.5",
+    "prompt-sync": "^4.2.0",
+    "sequelize": "^6.35.1"
+  }
+}

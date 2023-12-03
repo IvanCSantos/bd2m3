@@ -1,0 +1,32 @@
+# Instala o Docker https://docs.docker.com/get-docker/
+
+# Subindo o container do MySQL
+docker container run -d --name mysqlm3 -p 3306:3306 -e MYSQL_ROOT_PASSWORD=a1b2c3d4 -e MYSQL_ROOT_HOST=% mysql/mysql-server:5.7
+# Importação do modelo informado pelo professor https://github.com/datacharmer/test_db.git
+# Executar o bash do container para importar a base test-db
+docker container ls
+docker container exec -it <id do container> bash
+# Dentro do container:
+yum install git
+git clone https://github.com/datacharmer/test_db.git
+cd test_db
+mysql -u root -p < employees.sql
+
+# Subindo o container do Cassandra
+docker container run -d --name cassandram3 -v /Users/ivansantos/Dev/UNIVALI/BancoDadosII/cassandra/datadir:/var/lib/cassandra -p 9042:9042 cassandra
+
+# Inicializa o repositório Git
+git init
+git remote add origin git@github.com:IvanCSantos/bd2m2.1.git
+git rebase origin/main 
+git push --set-upstream origin main
+
+# Inicia o NPM
+npm init
+
+# Instala dependencias
+npm install --save sequelize
+npm install --save express
+npm install --save mysql2
+npm install --save cassandra-driver
+npm install --save prompt-sync
