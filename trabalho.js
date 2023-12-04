@@ -42,56 +42,56 @@ let loadDataToDatastax = async function (){
   await client.connect();
   
   // Questão 2a
-  // await client.execute("DROP TABLE IF EXISTS employees.bymanager");
-  // await client.execute("CREATE TABLE employees.bymanager (manager text, department text, employee text, PRIMARY KEY(manager, department, employee));");
+  await client.execute("DROP TABLE IF EXISTS employees.bymanager");
+  await client.execute("CREATE TABLE employees.bymanager (manager text, department text, employee text, PRIMARY KEY(manager, department, employee));");
   
-  // let sql=`SELECT 
-  //           concat(concat(e.first_name," "), e.last_name ) as Manager,
-  //           d.dept_name as Department,
-  //           concat(concat(e2.first_name," "), e2.last_name ) as Employee
-  //         FROM dept_manager m
-  //           INNER JOIN employees e ON (m.emp_no = e.emp_no)
-  //           INNER JOIN departments d ON (m.dept_no = d.dept_no)
-  //           LEFT JOIN dept_emp de ON (d.dept_no = de.dept_no)
-  //           LEFT JOIN employees e2 ON (de.emp_no = e2.emp_no)
-  //         WHERE m.to_date = '9999-01-01';`;
+  let sql=`SELECT 
+            concat(concat(e.first_name," "), e.last_name ) as Manager,
+            d.dept_name as Department,
+            concat(concat(e2.first_name," "), e2.last_name ) as Employee
+          FROM dept_manager m
+            INNER JOIN employees e ON (m.emp_no = e.emp_no)
+            INNER JOIN departments d ON (m.dept_no = d.dept_no)
+            LEFT JOIN dept_emp de ON (d.dept_no = de.dept_no)
+            LEFT JOIN employees e2 ON (de.emp_no = e2.emp_no)
+          WHERE m.to_date = '9999-01-01';`;
 
-  // await con.query(sql, async function(err, result, fields) {
-  //   if(err) throw err;
+  await con.query(sql, async function(err, result, fields) {
+    if(err) throw err;
 
-  //   await result.forEach(async record => {
-  //     let sql ="INSERT INTO employees.bymanager (manager, department, employee)";
-  //     sql+= ` VALUES('${record["Manager"]}','${record["Department"]}','${record["Employee"]}');`;
-  //     //console.log(sql);
-  //     const rs = await client.execute(sql);
-  //     console.log(`Your cluster returned ${rs.rowLength} row(s)`);
-  //   });
-  // });
+    await result.forEach(async record => {
+      let sql ="INSERT INTO employees.bymanager (manager, department, employee)";
+      sql+= ` VALUES('${record["Manager"]}','${record["Department"]}','${record["Employee"]}');`;
+      //console.log(sql);
+      const rs = await client.execute(sql);
+      console.log(`Your cluster returned ${rs.rowLength} row(s)`);
+    });
+  });
   // Fim Questão 2a
 
     // Questão 2b
-  // await client.execute("DROP TABLE IF EXISTS employees.byDepartmentAndDate");
-  // await client.execute("CREATE TABLE employees.byDepartmentAndDate (department text, from_date date, to_date date, employee text, PRIMARY KEY(department, from_date, to_date));");
+  await client.execute("DROP TABLE IF EXISTS employees.byDepartmentAndDate");
+  await client.execute("CREATE TABLE employees.byDepartmentAndDate (department text, from_date date, to_date date, employee text, PRIMARY KEY(department, from_date, to_date));");
 
-  // sql=`SELECT
-	//           d.dept_name as Department,
-	//           DATE_FORMAT(de.from_date, '%Y-%c-%d') as FromDate,
-	//           DATE_FORMAT(de.to_date, '%Y-%c-%d') as ToDate,
-	//           concat(concat(e.first_name," "), e.last_name ) as Employee
-  //         FROM dept_emp de
-	//           INNER JOIN departments d ON (de.dept_no = d.dept_no)
-	//           INNER JOIN employees e ON (de.emp_no = e.emp_no)`;
+  sql=`SELECT
+	          d.dept_name as Department,
+	          DATE_FORMAT(de.from_date, '%Y-%c-%d') as FromDate,
+	          DATE_FORMAT(de.to_date, '%Y-%c-%d') as ToDate,
+	          concat(concat(e.first_name," "), e.last_name ) as Employee
+          FROM dept_emp de
+	          INNER JOIN departments d ON (de.dept_no = d.dept_no)
+	          INNER JOIN employees e ON (de.emp_no = e.emp_no)`;
 
-  // await con.query(sql, async function(err, result, fields) {
-  //     if(err) throw err;
-  //     await result.forEach(async record => {
-  //       let sql ="INSERT INTO employees.byDepartmentAndDate (department, from_date, to_date, employee)";
-  //       sql+= ` VALUES('${record["Department"]}','${record["FromDate"]}','${record["ToDate"]}','${record["Employee"]}');`;
-  //       //console.log(sql);
-  //       const rs = await client.execute(sql);
-  //       console.log(`Your cluster returned ${rs.rowLength} row(s)`);
-  //     });
-  //   });
+  await con.query(sql, async function(err, result, fields) {
+      if(err) throw err;
+      await result.forEach(async record => {
+        let sql ="INSERT INTO employees.byDepartmentAndDate (department, from_date, to_date, employee)";
+        sql+= ` VALUES('${record["Department"]}','${record["FromDate"]}','${record["ToDate"]}','${record["Employee"]}');`;
+        //console.log(sql);
+        const rs = await client.execute(sql);
+        console.log(`Your cluster returned ${rs.rowLength} row(s)`);
+      });
+    });
     // Fim Questão 2b
 
   // Questão 2c
@@ -145,49 +145,70 @@ let getEmployeesByDepartmentAndDate = async function() {
   console.log(rs.rows);
 }
 
-loadDataToDatastax();
+// 2c
+let getAverageWage = async function() {
+  let sql = `SELECT * from employees.averagewage`;
+  //console.log(sql);
+  const rs = await client.execute(sql);
+  //console.log(rs.rows);
+  let departments = {};
+
+  for(const row of rs) {
+    let department = row["department"];
+    if(departments[department] != undefined) {
+      departments[department].salary += row["salary"];
+      departments[department].countSalary += 1;
+    } else {
+      departments[department] = {
+        salary: row["salary"],
+        countSalary: 1,
+      };
+    }
+  }
+
+  for(const [key, value] of Object.entries(departments)) {
+    console.log(`${key}: ${(value.salary / value.countSalary).toFixed(2)}`);
+  }
+}
+
+//loadDataToDatastax();
 
 const displayMenuOptions = function() {
   console.log("*** SELECIONE A OPÇÃO DESEJADA ***");
   console.log("1. Sincroniza dados do MySQL para o Cassandra");
   console.log("2. Retorna todos os employeers a partir do manager");
-  console.log("3. Consulta funcionário a partir de um title");
-  console.log("4. Consulta funcionário a partir de um departamento");
-  console.log("5. Relatório de média salarial de funcionários por departamento");
-  console.log("6. Sair");
+  console.log("3. Retorna todos os employeers vinculados a um departamento em uma data");
+  console.log("4. Média salarial por departamento");
+  console.log("5. Sair");
   console.log("");
 }
 async function menu() {
   let option = 0
-  while(option !== 6){
+  while(option !== 5){
       displayMenuOptions();
       option = parseInt(prompt("Selectione uma opção do menu: "));
-      if(option < 1 || option > 6) {
-          console.log("Escolha uma opção entre 1 e 6");
+      if(option < 1 || option > 5) {
+          console.log("Escolha uma opção entre 1 e 5");
           break;
       }
       switch(option) {
           case 1:
-              loadDataToDatastax();
+              await loadDataToDatastax();
               break;
           case 2:
-              getEmployeesByManager();
+              await getEmployeesByManager();
               break;
           case 3:
               await getEmployeesByDepartmentAndDate();
               break;
           case 4:
-              let promptDepartment = prompt("Qual departamento deseja consultar? ");
-              await getEmployeeByDepartment(promptDepartment);
-              break
+              await getAverageWage();
+              break;
           case 5:
-              await getDepartmentsAverageWage();
-              break
-          case 6:
               console.log(typeof(option),": ", option);
           default:
               console.log(`Opção inválida ${option}!`);
       }
   }
 }
-//menu();
+menu();
