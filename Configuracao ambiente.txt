@@ -13,11 +13,11 @@ cd test_db
 mysql -u root -p < employees.sql
 
 # Subindo o container do Cassandra
-docker container run -d --name cassandram3 -v /Users/ivansantos/Dev/UNIVALI/BancoDadosII/cassandra/datadir:/var/lib/cassandra -p 9042:9042 cassandra
+docker container run -d --name cassandra -v /Users/ivansantos/Dev/UNIVALI/BancoDadosII/cassandra/datadir:/var/lib/cassandra -p 9042:9042 cassandra
 
 # Inicializa o repositório Git
 git init
-git remote add origin git@github.com:IvanCSantos/bd2m2.1.git
+git remote add origin git@github.com:IvanCSantos/bd2m3.git
 git rebase origin/main 
 git push --set-upstream origin main
 
