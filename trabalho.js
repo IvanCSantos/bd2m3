@@ -70,30 +70,60 @@ let loadDataToDatastax = async function (){
   // Fim Questão 2a
 
     // Questão 2b
-  await client.execute("DROP TABLE IF EXISTS employees.byDepartmentAndDate");
-  await client.execute("CREATE TABLE employees.byDepartmentAndDate (department text, from_date date, to_date date, employee text, PRIMARY KEY(department, from_date, to_date));");
+  // await client.execute("DROP TABLE IF EXISTS employees.byDepartmentAndDate");
+  // await client.execute("CREATE TABLE employees.byDepartmentAndDate (department text, from_date date, to_date date, employee text, PRIMARY KEY(department, from_date, to_date));");
 
+  // sql=`SELECT
+	//           d.dept_name as Department,
+	//           DATE_FORMAT(de.from_date, '%Y-%c-%d') as FromDate,
+	//           DATE_FORMAT(de.to_date, '%Y-%c-%d') as ToDate,
+	//           concat(concat(e.first_name," "), e.last_name ) as Employee
+  //         FROM dept_emp de
+	//           INNER JOIN departments d ON (de.dept_no = d.dept_no)
+	//           INNER JOIN employees e ON (de.emp_no = e.emp_no)`;
+
+  // await con.query(sql, async function(err, result, fields) {
+  //     if(err) throw err;
+  //     await result.forEach(async record => {
+  //       let sql ="INSERT INTO employees.byDepartmentAndDate (department, from_date, to_date, employee)";
+  //       sql+= ` VALUES('${record["Department"]}','${record["FromDate"]}','${record["ToDate"]}','${record["Employee"]}');`;
+  //       //console.log(sql);
+  //       const rs = await client.execute(sql);
+  //       console.log(`Your cluster returned ${rs.rowLength} row(s)`);
+  //     });
+  //   });
+    // Fim Questão 2b
+
+  // Questão 2c
+  await client.execute("DROP TABLE IF EXISTS employees.averageWage");
+  await client.execute("CREATE TABLE employees.averageWage (department text, employeeID int, birthDate date, firstName text, lastName text, gender text, hireDate date, salary float, PRIMARY KEY(department, employeeid));");
+  
   sql=`SELECT
-	          d.dept_name as Department,
-	          DATE_FORMAT(de.from_date, '%Y-%c-%d') as FromDate,
-	          DATE_FORMAT(de.to_date, '%Y-%c-%d') as ToDate,
-	          concat(concat(e.first_name," "), e.last_name ) as Employee
-          FROM dept_emp de
-	          INNER JOIN departments d ON (de.dept_no = d.dept_no)
-	          INNER JOIN employees e ON (de.emp_no = e.emp_no)`;
+	          e.emp_no as EmployeeID,
+            DATE_FORMAT(e.birth_date, '%Y-%c-%d') as BirthDate,
+            e.first_name as FirstName,
+            e.last_name as LastName,
+            e.gender as Gender,
+            DATE_FORMAT(e.hire_date, '%Y-%c-%d') as HireDate,
+            d.dept_name as Department,
+            s.salary as Salary
+          FROM employees e 
+            INNER JOIN dept_emp de ON (e.emp_no = de.emp_no)
+            INNER JOIN departments d ON (de.dept_no = d.dept_no)
+            INNER JOIN salaries s ON (e.emp_no = s.emp_no)
+          WHERE de.to_date = '9999-01-01' AND s.to_date = '9999-01-01'`;
 
   await con.query(sql, async function(err, result, fields) {
-      if(err) throw err;
-      await result.forEach(async record => {
-        let sql ="INSERT INTO employees.byDepartmentAndDate (department, from_date, to_date, employee)";
-        sql+= ` VALUES('${record["Department"]}','${record["FromDate"]}','${record["ToDate"]}','${record["Employee"]}');`;
-        //console.log(sql);
-        const rs = await client.execute(sql);
-        console.log(`Your cluster returned ${rs.rowLength} row(s)`);
-      });
+    if(err) throw err;
+    await result.forEach(async record => {
+      let sql ="INSERT INTO employees.averageWage (department, employeeID, birthDate, firstName, lastName, gender, hireDate, salary)";
+      sql+= ` VALUES('${record["Department"]}',${record["EmployeeID"]},'${record["BirthDate"]}','${record["FirstName"]}','${record["LastName"]}','${record["Gender"]}','${record["HireDate"]}',${record["Salary"]});`;
+      console.log(sql);
+      const rs = await client.execute(sql);
+      console.log(`Your cluster returned ${rs.rowLength} row(s)`);
     });
-    // Fim Questão 2b
-    
+  });
+  // Fim Questão 2c
 };
 
 // 2a
@@ -115,7 +145,7 @@ let getEmployeesByDepartmentAndDate = async function() {
   console.log(rs.rows);
 }
 
-//loadDataToDatastax();
+loadDataToDatastax();
 
 const displayMenuOptions = function() {
   console.log("*** SELECIONE A OPÇÃO DESEJADA ***");
@@ -160,4 +190,4 @@ async function menu() {
       }
   }
 }
-menu();
+//menu();
