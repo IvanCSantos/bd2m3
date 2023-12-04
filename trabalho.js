@@ -95,11 +95,11 @@ const client = new cassandra.Client({
 let loadDataToDatastax = async function (){
   await client.connect();
   await client.execute("DROP TABLE IF EXISTS employees.bymanager");
-  await client.execute("CREATE TABLE employees.bymanager (employeeID int, manager text, department text, employee text, PRIMARY KEY(employeeID,manager));");
+  await client.execute("CREATE TABLE employees.bymanager (manager text, department text, employee text, PRIMARY KEY(manager, department, employee));");
+  //await client.execute("CREATE INDEX ON employees.bymanager (manager);");
   
   // Questão 2a
-  let sql=`SELECT 	e2.emp_no as EmployeeID,
-          concat(concat(e.first_name," "), e.last_name ) as Manager,
+  let sql=`SELECT concat(concat(e.first_name," "), e.last_name ) as Manager,
           d.dept_name as Department,
           concat(concat(e2.first_name," "), e2.last_name ) as Employee
           FROM dept_manager m
@@ -115,8 +115,8 @@ let loadDataToDatastax = async function (){
       let count = 0;
       await result.forEach(async record => {
         console.log(++count);
-        let sql ="INSERT INTO employees.bymanager (employeeID, manager, department, employee)";
-        sql+= ` VALUES(${record["EmployeeID"]},'${record["Manager"]}','${record["Department"]}','${record["Employee"]}');`;
+        let sql ="INSERT INTO employees.bymanager (manager, department, employee)";
+        sql+= ` VALUES('${record["Manager"]}','${record["Department"]}','${record["Employee"]}');`;
         console.log(sql);
         await client.connect();
         const rs = await client.execute(sql);
