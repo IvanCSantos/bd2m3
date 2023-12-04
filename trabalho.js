@@ -94,36 +94,66 @@ const client = new cassandra.Client({
 
 let loadDataToDatastax = async function (){
   await client.connect();
-  await client.execute("DROP TABLE IF EXISTS employees.bymanager");
-  await client.execute("CREATE TABLE employees.bymanager (manager text, department text, employee text, PRIMARY KEY(manager, department, employee));");
-  //await client.execute("CREATE INDEX ON employees.bymanager (manager);");
   
   // Questão 2a
-  let sql=`SELECT concat(concat(e.first_name," "), e.last_name ) as Manager,
-          d.dept_name as Department,
-          concat(concat(e2.first_name," "), e2.last_name ) as Employee
-          FROM dept_manager m
-          INNER JOIN employees e ON (m.emp_no = e.emp_no)
-          INNER JOIN departments d ON (m.dept_no = d.dept_no)
-          LEFT JOIN dept_emp de ON (d.dept_no = de.dept_no)
-          LEFT JOIN employees e2 ON (de.emp_no = e2.emp_no)
-          WHERE m.to_date = '9999-01-01';`;
+  // await client.execute("DROP TABLE IF EXISTS employees.bymanager");
+  // await client.execute("CREATE TABLE employees.bymanager (manager text, department text, employee text, PRIMARY KEY(manager, department, employee));");
+  // ////await client.execute("CREATE INDEX ON employees.bymanager (manager);");
+  // let sql=`SELECT 
+  //           concat(concat(e.first_name," "), e.last_name ) as Manager,
+  //           d.dept_name as Department,
+  //           concat(concat(e2.first_name," "), e2.last_name ) as Employee
+  //         FROM dept_manager m
+  //           INNER JOIN employees e ON (m.emp_no = e.emp_no)
+  //           INNER JOIN departments d ON (m.dept_no = d.dept_no)
+  //           LEFT JOIN dept_emp de ON (d.dept_no = de.dept_no)
+  //           LEFT JOIN employees e2 ON (de.emp_no = e2.emp_no)
+  //         WHERE m.to_date = '9999-01-01';`;
+
+  // await con.query(sql, async function(err, result, fields) {
+  //     if(err) throw err;
+  //     //console.log("Result: " + JSON.stringify(result));
+  //     //let count = 0;
+  //     await result.forEach(async record => {
+  //       //console.log(++count);
+  //       let sql ="INSERT INTO employees.bymanager (manager, department, employee)";
+  //       sql+= ` VALUES('${record["Manager"]}','${record["Department"]}','${record["Employee"]}');`;
+  //       //console.log(sql);
+  //       await client.connect();
+  //       const rs = await client.execute(sql);
+  //       console.log(`Your cluster returned ${rs.rowLength} row(s)`);
+  //     });
+  //   });
+  //   // Fim Questão 2a
+
+    // Questão 2b
+  await client.execute("DROP TABLE IF EXISTS employees.byDepartmentAndDate");
+  await client.execute("CREATE TABLE employees.byDepartmentAndDate (department text, from_date date, to_date date, employee text, PRIMARY KEY(department, from_date, to_date));");
+  //await client.execute("CREATE INDEX ON employees.bymanager (manager);");
+  sql=`SELECT
+	          d.dept_name as Department,
+	          DATE_FORMAT(de.from_date, '%Y-%c-%d') as FromDate,
+	          DATE_FORMAT(de.to_date, '%Y-%c-%d') as ToDate,
+	          concat(concat(e.first_name," "), e.last_name ) as Employee
+          FROM dept_emp de
+	          INNER JOIN departments d ON (de.dept_no = d.dept_no)
+	          INNER JOIN employees e ON (de.emp_no = e.emp_no)`;
 
   await con.query(sql, async function(err, result, fields) {
       if(err) throw err;
       //console.log("Result: " + JSON.stringify(result));
-      let count = 0;
+      //let count = 0;
       await result.forEach(async record => {
-        console.log(++count);
-        let sql ="INSERT INTO employees.bymanager (manager, department, employee)";
-        sql+= ` VALUES('${record["Manager"]}','${record["Department"]}','${record["Employee"]}');`;
+        //console.log(++count);
+        let sql ="INSERT INTO employees.byDepartmentAndDate (department, from_date, to_date, employee)";
+        sql+= ` VALUES('${record["Department"]}','${record["FromDate"]}','${record["ToDate"]}','${record["Employee"]}');`;
         console.log(sql);
         await client.connect();
         const rs = await client.execute(sql);
         console.log(`Your cluster returned ${rs.rowLength} row(s)`);
       });
     });
-    // Fim Questão 2a
+    // Fim Questão 2b
     
   //await client.shutdown();
 };
